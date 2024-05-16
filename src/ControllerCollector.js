@@ -16,14 +16,16 @@ module.exports = class ControllerCollector extends SystemCollector {
 
   /**
    * @param {string} name 
+   * @param {string} path
    * @param {(string|CallableFunction)} callable 
    * @returns {import('./SystemItem')}
    */
-  addRoute(name, callable) {
+  addRoute(name, path, callable = null) {
     return this.add(this.getCurrent().id + '.' + name)
       .setAttribute('base', this.prefix + '.' + this.getCurrent().id)
+      .setAttribute('path', path)
       .setTag('route')
-      .addAction('route', callable);
+      .addAction('route', callable ?? name);
   }
 
   /**
