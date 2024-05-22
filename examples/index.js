@@ -1,5 +1,7 @@
+/*
 const SystemCollector = require('../src/SystemCollector');
 const ControllerCollector = require('../src/ControllerCollector');
+const ZeroRoot = require('../src/ZeroRoot');
 
 SystemCollector.collect(new ControllerCollector(__dirname));
 
@@ -21,3 +23,10 @@ const controllers = SystemCollector.each(item => {
 });
 
 console.log(controllers);
+*/
+
+const ZeroRoot = require('../src/ZeroRoot');
+
+const root = new ZeroRoot(__dirname, null);
+
+root.init();

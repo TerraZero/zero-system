@@ -3,12 +3,27 @@ const Glob = require('glob');
 const SystemItem = require('./SystemItem');
 
 const register = [];
+const paths = [];
 
 module.exports = class SystemCollector {
 
   /** @returns {SystemItem[]} */
   static get register() {
     return register;
+  }
+
+  /** @returns {string[]} */
+  static get paths() {
+    return paths;
+  }
+
+  /**
+   * @param {string} path 
+   * @returns {this}
+   */
+  static addPath(path) {
+    this.paths.push(path);
+    return this;
   }
 
   /**
@@ -79,9 +94,26 @@ module.exports = class SystemCollector {
 
   /**
    * @param {SystemCollector} collector 
+   * @returns {this}
    */
-  static collect(collector) {
-    collector.collect();
+  static addCollector(collector) {
+    SystemCollector.set('collector.' + collector.prefix, collector, {
+      tags: ['collector'],
+    });
+    return this;
+  }
+
+  /**
+   * @param {boolean} reset 
+   * @returns {this}
+   */
+  static collect(reset = false) {
+    SystemCollector.each(item => {
+      if (item.hasTag('collector')) {
+        item.getObject().collect(reset);
+      }
+    });
+    return this;
   }
 
   /**
@@ -99,19 +131,29 @@ module.exports = class SystemCollector {
     this.validate = validate;
 
     this._current = null;
+    this._collected = [];
   }
 
-  collect() {
-    SystemCollector.set('collector.' + this.prefix, this);
+  collect(reset = false) {
+    if (reset) this._collected = [];
 
-    const files = Glob.sync(this.pattern, {
-      cwd: this.path,
-    });
+    for (const path of SystemCollector.paths) {
+      if (this._collected.includes(path)) continue;
 
-    for (const file of files) {
-      this.setCurrent(require(Path.join(this.path, file)));
-      this.getCurrent().define(this);
+      const files = Glob.sync(this.pattern, {
+        cwd: Path.join(path, this.path),
+      });
+  
+      for (const file of files) {
+        this.setCurrent(require(Path.join(path, this.path, file)));
+        this.doDefine(this.getCurrent());
+      }
+      this._collected.push(path);
     }
+  }
+
+  doDefine(construct) {
+    construct.define(this);
   }
 
   setCurrent(construct) {
@@ -129,7 +171,7 @@ module.exports = class SystemCollector {
   add(name) {
     return SystemCollector.add(this.prefix + '.' + name)
       .setCollector(this)
-      .setConstruct(this._current)
+      .setConstruct(this.getCurrent())
       .setTag(this.prefix);
   }
 
