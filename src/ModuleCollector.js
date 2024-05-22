@@ -6,7 +6,7 @@ module.exports = class ModuleCollector extends SystemCollector {
    * @param {string} path 
    * @param {import('./ZeroRoot')} root
    */
-  constructor(root, path = 'modules') {
+  constructor(root, path = 'module') {
     super('module', path, '**/*.module.js');
     this.root = root;
   }
