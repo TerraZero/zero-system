@@ -76,6 +76,17 @@ module.exports = class SystemCollector {
   }
 
   /**
+   * @param {CallableFunction} predicate 
+   * @returns {?SystemItem}
+   */
+  static find(predicate) {
+    for (const item of this.register) {
+      if (predicate(item)) return item;
+    }
+    return null;
+  }
+
+  /**
    * @param {string} name 
    * @returns {?SystemItem.T_SystemItemInfo}
    */
