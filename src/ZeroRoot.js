@@ -25,11 +25,16 @@ module.exports = class ZeroRoot {
     return Path.join(this.root, ...paths);
   }
 
-  init() {
+  boot() {
     const zero = scaffold.getZeroJson(this.root);
     if (zero) this.initModule(zero, this.root);
 
     SystemCollector.addCollector(new ModuleCollector(this));
+    SystemCollector.collect();
+    this.hook('boot', this);
+  }
+
+  init() {
     SystemCollector.collect();
     this.hook('init', this);
   }
