@@ -4,6 +4,7 @@ const SystemItem = require('./SystemItem');
 
 const register = [];
 const paths = [];
+let debug = false;
 
 module.exports = class SystemCollector {
 
@@ -15,6 +16,14 @@ module.exports = class SystemCollector {
   /** @returns {string[]} */
   static get paths() {
     return paths;
+  }
+
+  static get debug() {
+    return this.debug;
+  }
+
+  static set debug(value) {
+    this.debug = value;
   }
 
   /**
@@ -145,18 +154,31 @@ module.exports = class SystemCollector {
     this._collected = [];
   }
 
+  debug(...messages) {
+    if (SystemCollector.debug) {
+      console.log(`[COLLECTOR-${this.prefix}]`, ...messages);
+    }
+  }
+
   collect(reset = false) {
     if (reset) this._collected = [];
 
     for (const path of SystemCollector.paths) {
-      if (this._collected.includes(path)) continue;
+      if (this._collected.includes(path)) {
+        this.debug(`Already collected "${path}"`);
+        continue;
+      }
 
+      const fileroot = Path.join(path, this.path);
+      this.debug(`Glob "${fileroot}" with pattern "${this.pattern}"`);
       const files = Glob.sync(this.pattern, {
-        cwd: Path.join(path, this.path),
+        cwd: fileroot,
       });
   
       for (const file of files) {
-        this.setCurrent(require(Path.join(path, this.path, file)));
+        const filepath = Path.join(path, this.path, file);
+        this.debug(`Load file "${filepath}"`);
+        this.setCurrent(require(filepath));
         this.doDefine(this.getCurrent());
       }
       this._collected.push(path);
