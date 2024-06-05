@@ -19,6 +19,7 @@ module.exports = class SystemItem {
     this.name = name;
     this.object = object;
     this.info = info;
+    this.volatile = false;
   }
 
   /**
@@ -27,6 +28,15 @@ module.exports = class SystemItem {
    */
   setName(name) {
     this.name = name;
+    return this;
+  }
+
+  /**
+   * @param {boolean} volatile 
+   * @returns {this}
+   */
+  setVolatile(volatile = true) {
+    this.volatile = volatile;
     return this;
   }
 
@@ -133,7 +143,11 @@ module.exports = class SystemItem {
         this.object = new this.info.construct();
       }
     }
-    return this.object ?? null;
+    const obj = this.object ?? null;
+    if (this.volatile) {
+      this.object = null;
+    }
+    return obj;
   }
 
   /**
