@@ -19,11 +19,11 @@ module.exports = class SystemCollector {
   }
 
   static get debug() {
-    return this.debug;
+    return debug;
   }
 
   static set debug(value) {
-    this.debug = value;
+    debug = value;
   }
 
   /**
