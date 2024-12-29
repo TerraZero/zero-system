@@ -23,6 +23,10 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set the name or the id of the service. Used by `ServiceCollector.get()`.
+   * 
+   * @see SystemCollector.get
+   * 
    * @param {string} name 
    * @returns {this}
    */
@@ -32,6 +36,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set to true if the service is not cachable.
+   * 
    * @param {boolean} volatile 
    * @returns {this}
    */
@@ -41,6 +47,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set the constructor for the service. The class of this item.
+   * 
    * @param {NewableFunction} construct 
    * @returns {this}
    */
@@ -50,6 +58,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set the collector for this item.
+   * 
    * @param {import('./SystemCollector')} collector 
    * @returns {this}
    */
@@ -66,6 +76,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set the factory method for this item. The method must return the object of this item.
+   * 
    * @param {CallableFunction} factory 
    * @param {boolean} reset 
    * @returns {this}
@@ -89,6 +101,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set a tag for this item.
+   * 
    * @param {string} tag 
    * @returns {this}
    */
@@ -112,6 +126,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Set an attribute for this item.
+   * 
    * @param {string} key 
    * @param {any} value 
    * @returns {this}
@@ -139,7 +155,7 @@ module.exports = class SystemItem {
       
       if (factory !== null) {
         this.object = factory(this);
-      } else if (this.info.construct) {
+      } else if (typeof this.info.construct === 'function') {
         this.object = new this.info.construct();
       }
     }
@@ -151,6 +167,8 @@ module.exports = class SystemItem {
   }
 
   /**
+   * Add an action for this item.
+   * 
    * @param {string} action 
    * @param {(string|CallableFunction)} func 
    * @returns {this}
