@@ -1,10 +1,12 @@
 const Path = require('path');
 const Glob = require('glob');
 const SystemItem = require('./SystemItem');
+const Handler = require('events');
 
 const register = [];
 const paths = [];
 let debug = false;
+const handler = new Handler();
 
 module.exports = class SystemCollector {
 
@@ -24,6 +26,11 @@ module.exports = class SystemCollector {
 
   static set debug(value) {
     debug = value;
+  }
+
+  /** @returns {Handler} */
+  static get events() {
+    return handler;
   }
 
   /**
@@ -133,6 +140,7 @@ module.exports = class SystemCollector {
         item.getObject().collect(reset);
       }
     });
+    this.events.emit('system:collect', this);
     return this;
   }
 

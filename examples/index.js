@@ -25,8 +25,16 @@ const controllers = SystemCollector.each(item => {
 console.log(controllers);
 */
 
+const RemoteSystem = require('../src/RemoteSystem');
 const ZeroRoot = require('../src/ZeroRoot');
+const SystemCollector = require('../src/SystemCollector');
+
+SystemCollector.debug = true;
 
 const root = new ZeroRoot(__dirname, null);
 
+root.boot();
 root.init();
+
+const p = RemoteSystem.createRemoteProxy('test');
+p.hallo('cool');

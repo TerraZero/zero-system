@@ -5,7 +5,7 @@ module.exports = class ControllerCollector extends SystemCollector {
   /**
    * @param {string} path 
    */
-  constructor(path = 'controllers') {
+  constructor(path = 'controller') {
     super('controller', path, '**/*.controller.js');
   }
 

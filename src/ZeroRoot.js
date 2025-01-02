@@ -3,6 +3,7 @@ const scaffold = require('zero-scaffold');
 
 const ModuleCollector = require('./ModuleCollector');
 const SystemCollector = require('./SystemCollector');
+const StringUtil = require('./Util/StringUtil');
 
 module.exports = class ZeroRoot {
 
@@ -15,6 +16,8 @@ module.exports = class ZeroRoot {
     SystemCollector.addPath(root);
     this.root = root;
     this.app = app;
+
+    this.setups = {};
   }
 
   /**
@@ -29,14 +32,18 @@ module.exports = class ZeroRoot {
     const zero = scaffold.getZeroJson(this.root);
     if (zero) this.initModule(zero, this.root);
 
+    SystemCollector.events.on('system:collect', () => {
+      this.doSetup();
+    });
+
     SystemCollector.addCollector(new ModuleCollector(this));
     SystemCollector.collect();
-    this.hook('boot', this);
+    this.setup('boot', this);
   }
 
   init() {
     SystemCollector.collect();
-    this.hook('init', this);
+    this.setup('init', this);
   }
 
   /**
@@ -54,18 +61,50 @@ module.exports = class ZeroRoot {
     }
   }
 
-  hook(hook, ...args) {
-    SystemCollector.each(item => {
-      if (item.hasTag('module') && typeof item.getObject()[hook] === 'function') {
-        item.getObject()[hook](...args);
+  setup(setup, ...args) {
+    if (this.setups[setup] !== undefined) return false;
+
+    this.setups[setup] = {
+      register: [],
+      args,
+    };
+    this.doSetup();
+    return true;
+  }
+
+  doSetup() {
+    for (const setup in this.setups) {
+      for (const item of SystemCollector.register) {
+        if (item.hasTag('module') && !this.setups[setup].register.includes(item.name)) {
+          const object = item.getObject();
+          if (typeof object['setup' + StringUtil.ucFirst(setup)] === 'function') {
+            object['setup' + StringUtil.ucFirst(setup)](...this.setups[setup].args);
+          }
+          this.setups[setup].register.push(item.name);
+        }
       }
-    });
+    }
+    
+  }
+
+  hook(hook, ...args) {
+    for (const item of SystemCollector.register) {
+      if (item.hasTag('module')) {
+        const object = item.getObject();
+        if (typeof object[hook] === 'function') {
+          object[hook](...args);
+        }
+      }
+    }
   }
 
   async hookAsync(hook, ...args) {
-    for (const item of this.register) {
-      if (item.hasTag('module') && typeof item.getObject()[hook] === 'function') {
-        await item.getObject()[hook](...args);
+    for (const item of SystemCollector.register) {
+      if (item.hasTag('module')) {
+        const object = item.getObject();
+        if (typeof object[hook] === 'function') {
+          await object[hook](...args);
+        }
       }
     }
   }

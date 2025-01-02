@@ -6,10 +6,10 @@ module.exports = class TestModule extends ZeroModule {
    * @param {import('../src/ModuleCollector')} collector 
    */
   static define(collector) {
-    collector.add('test');
+    collector.add('test').setRemote();
   }
 
-  init() {
+  setupInit() {
     console.log('init test', this.root);
   }
 
