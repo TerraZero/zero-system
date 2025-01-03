@@ -99,7 +99,7 @@ export default class Logger {
    * @param {(Array|Object<string, string>|StringInserter)} placeholders
    */
   exception(error, message = null, placeholders = {}) {
-
+    console.log(this.id, 'EXCEPTION:', error);
   }
 
 }
