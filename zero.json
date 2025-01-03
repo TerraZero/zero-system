@@ -5,6 +5,11 @@
         "type": "plugin",
         "namespace": "plugin",
         "pattern": "**/*.plugin.js"
+      },
+      {
+        "type": "nuxt-module",
+        "namespace": "module",
+        "pattern": "**/*.module.js"
       }
     ]
   }
