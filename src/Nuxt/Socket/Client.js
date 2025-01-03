@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 import { v4 as UUID } from 'uuid';
 
-export default class SocketClient {
+export default class Client {
 
   constructor(socket = null) {
     this._socket = socket;

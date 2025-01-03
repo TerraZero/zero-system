@@ -1,4 +1,4 @@
-export default class ServerClient {
+export default class Item {
 
   /**
    * @param {import('./SocketServer').default} socket 

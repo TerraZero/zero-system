@@ -1,8 +1,17 @@
 import StringUtil from '../Util/StringUtil';
 
 let _debug = false;
+let _instance = null;
 
 export default class Logger {
+
+  /** @returns {Logger} */
+  static get base() {
+    if (_instance === null) {
+      _instance = new Logger(['System']);
+    }
+    return this._instance;
+  }
 
   /**
    * @param {boolean} debug 

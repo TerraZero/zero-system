@@ -1,8 +1,8 @@
 import Logger from '../../Log/Logger';
 import AsyncHandler from '../../Util/AsyncHandler';
-import ServerClient from './ServerClient';
+import Item from './Item';
 
-export default class SocketServer {
+export default class Server {
 
   /**
    * @param {import('socket.io')} socket
@@ -25,7 +25,7 @@ export default class SocketServer {
    */
   setLogger(logger = null) {
     if (logger === null && !this.logger) {
-      logger = new Logger(['socket']);
+      logger = Logger.base.channel('socket');
     }
     this.logger = logger;
     return this;
@@ -38,7 +38,7 @@ export default class SocketServer {
       this.socket.on('connection', async mount => {
         this.logger.debug('Client {id} connect ...', { id: mount.id });
 
-        const client = new ServerClient(this, mount);
+        const client = new Item(this, mount);
         client.init();
         this.clients.push(client);
 
