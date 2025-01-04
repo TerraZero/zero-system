@@ -15,6 +15,11 @@
         "type": "nuxt-module",
         "namespace": "module",
         "pattern": "**/*.module.js"
+      },
+      {
+        "type": "zero-config",
+        "namespace": "zero-config",
+        "pattern": "*.zero.json"
       }
     ]
   }

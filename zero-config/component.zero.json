@@ -1,0 +1,10 @@
+{
+  "scaffold": {
+    "paths": {
+      "comps": {
+        "path": "components/${module}/${file}",
+        "mode": "replace"
+      }
+    }
+  }
+}

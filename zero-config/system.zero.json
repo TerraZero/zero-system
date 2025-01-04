@@ -1,0 +1,28 @@
+{
+  "scaffold": {
+    "paths": {
+      "nuxt-plugin": {
+        "path": "custom/plugins/${file}",
+        "mode": "replace"
+      },
+      "plugin": {
+        "path": "custom/plugins/extend/${file}",
+        "mode": "replace"
+      },
+      "system": {
+        "path": "custom/${file}"
+      },
+      "module": {
+        "path": "custom/system/modules/${module}/${file}",
+        "mode": "replace"
+      },
+      "nuxt-module": {
+        "path": "custom/modules/${file}",
+        "mode": "replace"
+      },
+      "script": {
+        "path": "custom/scripts/${file}"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "scaffold": {
+    "paths": {
+      "prisma": {
+        "path": "custom/prisma/${file}"
+      },
+      "model": {
+        "path": "custom/prisma/models/${module}/${file}",
+        "prepend": [
+          "// > module ${module_name}\n\n"
+        ],
+        "append": [
+          ""
+        ],
+        "mode": "replace"
+      }
+    },
+    "after": [
+      {
+        "type": "append",
+        "file": "custom/prisma/connection.prisma",
+        "pattern": "custom/prisma/models/**/*.prisma",
+        "separator": "\n",
+        "result": "prisma/schema.prisma"
+      }
+    ]
+  }
+}
