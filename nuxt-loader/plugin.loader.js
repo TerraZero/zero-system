@@ -3,8 +3,8 @@ import Registry from 'zero-scaffold/src/Registry';
 
 export default async (ctx, inject) => {
   const registry = new Registry(null, RegistryValue);
-  const plugins = registry.all('plugin');
-  const context = require.context('./extend', false, /\.js$/);
+  const plugins = registry.all('nuxt-plugin');
+  const context = require.context('../plugins', false, /\.js$/);
 
   for (const plugin of plugins) {
     const extender = context('./' + plugin.id + '.js');

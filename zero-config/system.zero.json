@@ -1,12 +1,16 @@
 {
   "scaffold": {
     "paths": {
+      "nuxt-loader": {
+        "path": "custom/loaders/${file}",
+        "mode": "replace"
+      },
       "nuxt-plugin": {
         "path": "custom/plugins/${file}",
         "mode": "replace"
       },
-      "plugin": {
-        "path": "custom/plugins/extend/${file}",
+      "nuxt-module": {
+        "path": "custom/modules/${file}",
         "mode": "replace"
       },
       "system": {
@@ -14,10 +18,6 @@
       },
       "module": {
         "path": "custom/system/modules/${module}/${file}",
-        "mode": "replace"
-      },
-      "nuxt-module": {
-        "path": "custom/modules/${file}",
         "mode": "replace"
       },
       "script": {

@@ -2,19 +2,19 @@
   "scaffold": {
     "files": [
       {
-        "type": "nuxt-plugin",
-        "namespace": "nuxt-plugin",
-        "pattern": "**/*.plugin.js"
+        "type": "nuxt-loader",
+        "namespace": "nuxt-loader",
+        "pattern": "*.loader.js"
       },
       {
-        "type": "plugin",
-        "namespace": "plugin",
-        "pattern": "**/*.plugin.js"
+        "type": "nuxt-plugin",
+        "namespace": "nuxt-plugin",
+        "pattern": "*.plugin.js"
       },
       {
         "type": "nuxt-module",
-        "namespace": "module",
-        "pattern": "**/*.module.js"
+        "namespace": "nuxt-module",
+        "pattern": "*.module.js"
       },
       {
         "type": "zero-config",
