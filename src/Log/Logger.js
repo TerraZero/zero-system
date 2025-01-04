@@ -10,7 +10,7 @@ export default class Logger {
     if (_instance === null) {
       _instance = new Logger(['System']);
     }
-    return this._instance;
+    return _instance;
   }
 
   /**

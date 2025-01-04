@@ -1,5 +1,3 @@
-import Path from 'path';
-
 import RegistryValue from '~/zero.registry.json';
 import Registry from 'zero-scaffold/src/Registry';
 
@@ -9,7 +7,7 @@ export default async (ctx, inject) => {
   const context = require.context('./extend', false, /\.js$/);
 
   for (const plugin of plugins) {
-    const f = context('./' + plugin.id + '.js');
-    console.log(f);
+    const extender = context('./' + plugin.id + '.js');
+    extender(ctx, inject);
   }
 };
