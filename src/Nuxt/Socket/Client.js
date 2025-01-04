@@ -1,5 +1,5 @@
-import { io } from 'socket.io-client';
-import { v4 as UUID } from 'uuid';
+const { io } = require('socket.io-client');
+const { v4: UUID } = require('uuid');
 
 export default class Client {
 
