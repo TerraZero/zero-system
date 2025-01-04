@@ -8,16 +8,6 @@ export default async (ctx, inject) => {
 
   for (const plugin of plugins) {
     const extender = context('./' + plugin.id + '.js');
-    extender(ctx, inject);
+    extender.default(ctx, inject);
   }
 };
-
-/*
-import PluginRegistry from './plugins.registry';
-
-export default async (ctx, inject) => {
-  for (const plugin in PluginRegistry) {
-    PluginRegistry[plugin](ctx, inject);
-  }
-};
-*/
