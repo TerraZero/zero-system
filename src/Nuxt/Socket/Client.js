@@ -1,7 +1,7 @@
 const { io } = require('socket.io-client');
 const { v4: UUID } = require('uuid');
 
-export default class Client {
+module.exports = class Client {
 
   constructor(socket = null) {
     this._socket = socket;

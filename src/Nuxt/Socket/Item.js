@@ -1,4 +1,4 @@
-export default class Item {
+module.exports = class Item {
 
   /**
    * @param {import('./SocketServer').default} socket 

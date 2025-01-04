@@ -1,9 +1,9 @@
-import StringUtil from '../Util/StringUtil';
+const StringUtil = require('../Util/StringUtil');
 
 let _debug = false;
 let _instance = null;
 
-export default class Logger {
+module.exports = class Logger {
 
   /** @returns {Logger} */
   static get base() {

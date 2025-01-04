@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events');
 
-export default class AsyncHandler extends EventEmitter {
+module.exports = class AsyncHandler extends EventEmitter {
 
   async trigger(event, ...args) {
     const listeners = this.listeners(event);

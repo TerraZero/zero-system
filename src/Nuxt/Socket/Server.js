@@ -1,8 +1,8 @@
-import Logger from '../../Log/Logger';
-import AsyncHandler from '../../Util/AsyncHandler';
-import Item from './Item';
+const Logger = require('../../Log/Logger');
+const AsyncHandler = require('../../Util/AsyncHandler');
+const Item = require('./Item');
 
-export default class Server {
+module.exports = class Server {
 
   /**
    * @param {import('socket.io')} socket

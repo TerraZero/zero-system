@@ -11,3 +11,13 @@ export default async (ctx, inject) => {
     extender(ctx, inject);
   }
 };
+
+/*
+import PluginRegistry from './plugins.registry';
+
+export default async (ctx, inject) => {
+  for (const plugin in PluginRegistry) {
+    PluginRegistry[plugin](ctx, inject);
+  }
+};
+*/
