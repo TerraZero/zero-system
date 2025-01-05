@@ -2,11 +2,6 @@
   "scaffold": {
     "files": [
       {
-        "type": "nuxt-loader",
-        "namespace": "nuxt-loader",
-        "pattern": "*.loader.js"
-      },
-      {
         "type": "nuxt-plugin",
         "namespace": "nuxt-plugin",
         "pattern": "*.plugin.js"
