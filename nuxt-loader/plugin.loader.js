@@ -10,4 +10,4 @@ export default async (ctx, inject) => {
     const extender = context('./' + plugin.id + '.js');
     extender.default(ctx, inject);
   }
-};
+}
