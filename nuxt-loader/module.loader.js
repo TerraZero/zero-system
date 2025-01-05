@@ -1,13 +1,13 @@
-import RegistryValue from '~/zero.registry.json';
-import Registry from 'zero-scaffold/src/Registry';
+import Path from 'path';
+import Scaffold from 'zero-scaffold';
 
 export default function (...args) {
-  const registry = new Registry(null, RegistryValue);
+  const root = Scaffold.findPackageRoot(__dirname);
+  const registry = Scaffold.getRegistry(root);
   const modules = registry.all('nuxt-module');
-  const context = require.context('../modules', false, /\.js$/);
 
   for (const module of modules) {
-    const extender = context('./' + module.id + '.js');
+    const extender = require(Path.join(root, module.file));
     extender.default.apply(this, args);
   }
 }
