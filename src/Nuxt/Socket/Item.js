@@ -37,4 +37,9 @@ module.exports = class Item {
     });
   }
 
+  on(event, listener) {
+    this.mount.on(event, listener);
+    return this;
+  }
+
 }
