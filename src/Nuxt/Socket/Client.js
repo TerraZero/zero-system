@@ -1,69 +1,45 @@
-/**
- * @typedef T_Session
- * @property {string} ident
- */
+module.exports = class Item {
 
-const { io } = require('socket.io-client');
-const { v4: UUID } = require('uuid');
-const Cookies = require('js-cookie');
-
-const AsyncPromise = require('../../Util/AsyncPromise');
-
-module.exports = class Client {
-
-  constructor(socket = null) {
-    this.context = null;
-    this._socket = socket;
-    this._session = null;
+  /**
+   * @param {import('./SocketServer').default} socket 
+   * @param {import('socket.io').Socket} mount 
+   */
+  constructor(socket, mount) {
+    this.socket = socket;
+    this.mount = mount;
+    this.logger = this.socket.logger.channel(this.mount.id);
+    this.info = {};
   }
 
-  /** @returns {T_Session} */
-  get session() {
-    if (this._session === null) {
-      const session = JSON.parse(Cookies.get('zero.socket.session') ?? '{}');
-
-      if (!session.ident) {
-        this._session = {
-          ident: UUID(),
-        };
-        Cookies.set('zero.socket.session', JSON.stringify(this._session), { path: '', expires: 2 });
-      } else {
-        this._session = session;
-      }
-    }
-    return this._session;
+  get id() {
+    return this.mount.id;
   }
 
-  /** @returns {import('socket.io-client').Socket} */
-  get socket() {
-    if (this._socket === null) {
-      if (process.client) {
-        this._socket = io(window.location.origin);
-      } else {
-        this._socket = io(`http://${this.context.req.headers.host}`);
-      }
-    }
-    return this._socket;
+  get ident() {
+    return {
+      id: this.id,
+      info: this.info,
+    };
   }
 
-  setContext(context) {
-    this.context = context;
-  }
-
-  response(response) {
-    AsyncPromise.resolve(response.meta.uuid, response);
-  }
-
-  async request(event, ...args) {
-    const point = new AsyncPromise();
-    this.socket.emit(event, {
-      meta: {
-        uuid: point.uuid,
-        session: this.session,
-      },
-      args,
+  init() {
+    this.mount.on('server:controller', async ({ handler, data }) => {
+      let response = {};
+      await this.socket.handler.trigger('handler:' + handler, { data, response });
+      this.send('server:controller', { handler, data, response });
     });
-    return point.promise;
+  }
+
+  send(event, data) {
+    this.mount.emit(event, {
+      client: this.ident,
+      data,
+    });
+  }
+
+  on(event, listener) {
+    this.mount.on(event, listener);
+    return this;
   }
 
 }
