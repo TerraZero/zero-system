@@ -1,6 +1,7 @@
 /**
  * @typedef {Object} T_SystemItemInfo
  * @property {CallableFunction} [factory]
+ * @property {string} [file]
  * @property {string[]} [tags]
  * @property {NewableFunction} [construct]
  * @property {import('./SystemCollector')} [collector]
@@ -54,6 +55,15 @@ module.exports = class SystemItem {
    */
   setConstruct(construct) {
     if (construct) this.info.construct = construct;
+    return this;
+  }
+
+  /**
+   * @param {string} file 
+   * @returns {this}
+   */
+  setFile(file) {
+    this.info.file = file;
     return this;
   }
 

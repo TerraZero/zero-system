@@ -2,10 +2,10 @@ const Path = require('path');
 const Glob = require('glob');
 const SystemItem = require('./SystemItem');
 const Handler = require('events');
+const Logger = require('./Log/Logger');
 
 const register = [];
 const paths = [];
-let debug = false;
 const handler = new Handler();
 
 module.exports = class SystemCollector {
@@ -18,14 +18,6 @@ module.exports = class SystemCollector {
   /** @returns {string[]} */
   static get paths() {
     return paths;
-  }
-
-  static get debug() {
-    return debug;
-  }
-
-  static set debug(value) {
-    debug = value;
   }
 
   /** @returns {Handler} */
@@ -79,7 +71,7 @@ module.exports = class SystemCollector {
 
   /**
    * @param {CallableFunction} predicate 
-   * @returns {Object[]}
+   * @returns {SystemItem.T_SystemItemInfo[]}
    */
   static each(predicate) {
     const array = [];
@@ -157,15 +149,11 @@ module.exports = class SystemCollector {
     this.pattern = pattern;
     this.factory = factory;
     this.validate = validate;
+    this.logger = Logger.base.channel(prefix);
 
     this._current = null;
+    this._file = null;
     this._collected = [];
-  }
-
-  debug(...messages) {
-    if (SystemCollector.debug) {
-      console.log(`[COLLECTOR-${this.prefix}]`, ...messages);
-    }
   }
 
   collect(reset = false) {
@@ -173,20 +161,20 @@ module.exports = class SystemCollector {
 
     for (const path of SystemCollector.paths) {
       if (this._collected.includes(path)) {
-        this.debug(`Already collected "${path}"`);
+        this.logger.debug(`Already collected "${path}"`);
         continue;
       }
 
       const fileroot = Path.join(path, this.path);
-      this.debug(`Glob "${fileroot}" with pattern "${this.pattern}"`);
+      this.logger.debug(`Glob "${fileroot}" with pattern "${this.pattern}"`);
       const files = Glob.sync(this.pattern, {
         cwd: fileroot,
       });
   
       for (const file of files) {
         const filepath = Path.join(path, this.path, file);
-        this.debug(`Load file "${filepath}"`);
-        this.setCurrent(require(filepath));
+        this.logger.debug(`Load file "${filepath}"`);
+        this.setCurrent(require(filepath), filepath);
         this.doDefine(this.getCurrent());
       }
       this._collected.push(path);
@@ -197,8 +185,13 @@ module.exports = class SystemCollector {
     construct.define(this);
   }
 
-  setCurrent(construct) {
+  /**
+   * @param {NewableFunction} construct 
+   * @param {string} file 
+   */
+  setCurrent(construct, file) {
     this._current = construct;
+    this._file = file;
   }
 
   getCurrent() {
@@ -213,6 +206,7 @@ module.exports = class SystemCollector {
     return SystemCollector.add(this.prefix + '.' + name)
       .setCollector(this)
       .setConstruct(this.getCurrent())
+      .setFile(this._file)
       .setTag(this.prefix);
   }
 

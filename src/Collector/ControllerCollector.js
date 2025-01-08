@@ -1,4 +1,4 @@
-const SystemCollector = require('./SystemCollector');
+const SystemCollector = require('../SystemCollector');
 
 module.exports = class ControllerCollector extends SystemCollector {
 

@@ -1,14 +1,12 @@
-const SystemCollector = require('./SystemCollector');
+const SystemCollector = require('../SystemCollector');
 
-module.exports = class ModuleCollector extends SystemCollector {
+module.exports = class ServiceCollector extends SystemCollector {
 
   /**
    * @param {string} path 
-   * @param {import('./ZeroRoot')} root
    */
-  constructor(root, path = '') {
-    super('module', path, '**/*.module.js');
-    this.root = root;
+  constructor(path = '') {
+    super('service', path, '**/*.service.js');
   }
 
   /**
