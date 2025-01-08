@@ -1,5 +1,12 @@
 import Client from 'zero-system/src/Nuxt/Socket/Client';
 
-export default async (ctx, inject) => {
-  inject('socket', new Client());
-};
+const client = new Client();
+export default client;
+
+export function startup(context) {
+  client.setContext(context);
+
+  client.socket.on('response', (response) => {
+    client.response(response);
+  });
+}

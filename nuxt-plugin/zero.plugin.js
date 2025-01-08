@@ -1,5 +1,4 @@
 import RemoteSystem from 'zero-system/src/RemoteSystem';
+import socket from './socket.plugin';
 
-export default async (ctx, inject) => {
-  inject('zero', new RemoteSystem());
-};
+export default new RemoteSystem(socket);
