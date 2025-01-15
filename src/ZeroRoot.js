@@ -5,20 +5,74 @@ const SystemCollector = require('./SystemCollector');
 const ModuleCollector = require('./Collector/ModuleCollector');
 const ServiceCollector = require('./Collector/ServiceCollector');
 const StringUtil = require('./Util/StringUtil');
+const AsyncHandler = require('./Util/AsyncHandler');
 
 module.exports = class ZeroRoot {
 
+  static EVENT__BOOT = 'boot';
+  static EVENT__INIT = 'init';
+
+  /** @returns {ZeroRoot} */
+  static get base() {
+    return this._instance;
+  }
+
+  /**
+   * @param  {...string} paths 
+   * @returns {string}
+   */
+  static getRequirePath(...paths) {
+    const fullpath = Path.join(...paths);
+    
+    if (Path.isAbsolute(fullpath)) {
+      if (fullpath.startsWith(Path.normalize(this.base.root))) {
+        return Path.join(this.base.subroot, fullpath.substring(Path.normalize(this.base.root).length)).replace(/\\/g, '/');
+      }
+    } else {
+      if (require.resolve(fullpath)) {
+        return fullpath;
+      } 
+      if (require.resolve(Path.join('~', fullpath))) {
+        return Path.join('~', fullpath);
+      }
+    }
+    throw new Error('Could not create require path: "' + fullpath + '"');
+  }
+
+  /**
+   * @param {string} path 
+   * @returns {string}
+   */
+  static getRealRequirePath(path) {
+    path = Path.normalize(path);
+    if (path.startsWith(this.base.subroot)) {
+      return Path.join(this.base.root, path.substring(this.base.subroot.length));
+    } else {
+      return path;
+    }
+  } 
+
   /**
    * @param {string} root 
-   * @param {import('express').Express} app 
+   * @param {string} subroot
    */
-  constructor(root, app) {
+  constructor(root, subroot = '') {
+    this.constructor._instance = this;
+    this._root = root;
+    this._subroot = subroot;
     SystemCollector.set('root', this);
     SystemCollector.addPath(root);
-    this.root = root;
-    this.app = app;
+    this.events = new AsyncHandler();
 
     this.setups = {};
+  }
+
+  get root() {
+    return Path.normalize(this._root);
+  }
+
+  get subroot() {
+    return Path.normalize(this._subroot);
   }
 
   /**
@@ -26,14 +80,32 @@ module.exports = class ZeroRoot {
    * @returns {string}
    */
   path(...paths) {
-    return Path.join(this.root, ...paths);
+    const fullpath = Path.join(...paths);
+    if (Path.isAbsolute(fullpath)) {
+      return fullpath;
+    }
+    return Path.join(this.root, fullpath);
+  }
+
+  /**
+   * @param  {...string} paths 
+   * @returns {string}
+   */
+  pathrel(...paths) {
+    const fullpath = Path.join(...paths);
+    if (Path.isAbsolute(fullpath)) {
+      if (fullpath.startsWith(Path.normalize(this.root))) {
+        return fullpath.substring(Path.normalize(this.root).length);
+      }
+    }
+    return fullpath;
   }
 
   boot() {
     const zero = scaffold.getZeroJson(this.root);
     if (zero) this.initModule(zero, this.root);
 
-    SystemCollector.events.on('system:collect', () => {
+    this.events.on(SystemCollector.EVENT__COLLECT, () => {
       this.doSetup();
     });
 
@@ -41,11 +113,13 @@ module.exports = class ZeroRoot {
     SystemCollector.addCollector(new ServiceCollector());
     SystemCollector.collect();
     this.setup('boot', this);
+    SystemCollector.collect();
+    this.events.emit(ZeroRoot.EVENT__BOOT, this);
   }
 
   init() {
-    SystemCollector.collect();
     this.setup('init', this);
+    this.events.emit(ZeroRoot.EVENT__INIT, this);
   }
 
   /**
@@ -87,7 +161,6 @@ module.exports = class ZeroRoot {
         }
       }
     }
-    
   }
 
   hook(hook, ...args) {
@@ -100,6 +173,7 @@ module.exports = class ZeroRoot {
         }
       }
     }
+    this.events.emit('hook:' + hook, { args });
   }
 
   async hookAsync(hook, ...args) {
@@ -112,6 +186,7 @@ module.exports = class ZeroRoot {
         }
       }
     }
+    await this.events.trigger('hook:' + hook, { args });
   }
 
 }

@@ -66,7 +66,7 @@ module.exports = class StringUtil {
     }
 
     for (const placeholder in placeholders) {
-      message = message.replace(new RegExp(placeholder, 'g'), doInserter(placeholders[placeholder]));
+      message = message.replace(new RegExp('\\{' + placeholder + '\\}', 'g'), doInserter(placeholders[placeholder]));
     }
     return message;
   }

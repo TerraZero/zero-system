@@ -1,15 +1,66 @@
 /**
  * @typedef {Object} T_SystemItemInfo
- * @property {CallableFunction} [factory]
+ * @property {Object} [factory]
+ * @property {string} [factory.struct]
+ * @property {string} [factory.method]
  * @property {string} [file]
  * @property {string[]} [tags]
- * @property {NewableFunction} [construct]
- * @property {import('./SystemCollector')} [collector]
- * @property {Object<string, (string|CallableFunction)>} [actions]
+ * @property {string} [construct]
+ * @property {string} [collector]
+ * @property {Object<string, string>} [actions]
  * @property {Object<string, any>} [attributes]
+ * @property {boolean} [volatile]
+ */
+
+/**
+ * @typedef {Object} T_SystemItemPack
+ * @property {string} name
+ * @property {T_SystemItemInfo} info
  */
 
 module.exports = class SystemItem {
+
+  /**
+   * Lazy load ZeroRoot
+   * @returns {typeof import('./ZeroRoot')}
+   */
+  static get ZeroRoot() {
+    if (this._ZeroRoot === undefined) {
+      this._ZeroRoot = require('./ZeroRoot');
+    }
+    return this._ZeroRoot;
+  }
+
+  /**
+   * Lazy load SystemCollector
+   * @returns {typeof import('./SystemCollector')}
+   */
+  static get SystemCollector() {
+    if (this._SystemCollector === undefined) {
+      this._SystemCollector = require('./SystemCollector');
+    }
+    return this._SystemCollector;
+  }
+
+  /**
+   * @param {SystemItem} item 
+   * @returns {?T_SystemItemPack}
+   */
+  static pack(item) {
+    if (!item.info.file) return null;
+    return {
+      name: item.name,
+      info: item.info,
+    };
+  }
+
+  /**
+   * @param {T_SystemItemPack} object 
+   * @returns {SystemItem}
+   */
+  static unpack(object) {
+    return new SystemItem(object.name, null, object.info);
+  }
 
   /**
    * @param {string} name 
@@ -19,8 +70,10 @@ module.exports = class SystemItem {
   constructor(name, object, info = {}) {
     this.name = name;
     this.object = object;
+    this.collector = undefined;
+    this.factory = undefined;
+    this.construct = undefined;
     this.info = info;
-    this.volatile = false;
   }
 
   /**
@@ -43,18 +96,18 @@ module.exports = class SystemItem {
    * @returns {this}
    */
   setVolatile(volatile = true) {
-    this.volatile = volatile;
+    this.info.volatile = volatile;
     return this;
   }
 
   /**
    * Set the constructor for the service. The class of this item.
    * 
-   * @param {NewableFunction} construct 
+   * @param {string} construct 
    * @returns {this}
    */
   setConstruct(construct) {
-    if (construct) this.info.construct = construct;
+    this.info.construct = SystemItem.ZeroRoot.getRequirePath(construct);
     return this;
   }
 
@@ -63,18 +116,22 @@ module.exports = class SystemItem {
    * @returns {this}
    */
   setFile(file) {
-    this.info.file = file;
+    this.info.file = SystemItem.ZeroRoot.getRequirePath(file);
     return this;
   }
 
   /**
    * Set the collector for this item.
    * 
-   * @param {import('./SystemCollector')} collector 
+   * @param {(string|import('./SystemCollector'))} collector
    * @returns {this}
    */
   setCollector(collector) {
-    this.info.collector = collector;
+    if (collector instanceof SystemItem.SystemCollector) {
+      this.info.collector = collector.id;
+    } else {
+      this.info.collector = collector;
+    }
     return this;
   }
 
@@ -110,35 +167,84 @@ module.exports = class SystemItem {
   }
 
   /**
-   * @returns {?import('./SystemCollector')}
+   * Set the factory method for this item. The method must return the object of this item.
+   * 
+   * @param {string} struct 
+   * @param {string} method 
+   * @returns {this}
    */
-  getCollector() {
-    return this.info.collector;
+  setFactory(struct = 'this', method = 'factory') {
+    this.info.factory = {
+      struct: struct === 'this' ? this.info.file : struct,
+      method,
+    };
+    return this;
   }
 
   /**
-   * Set the factory method for this item. The method must return the object of this item.
-   * 
-   * @param {CallableFunction} factory 
-   * @param {boolean} reset 
-   * @returns {this}
+   * @returns {?string}
    */
-  setFactory(factory, reset = false) {
-    this.info.factory = factory;
-    if (reset) {
-      this.object = null;
+  getRealFactoryStruct() {
+    if (this.info.factory && this.info.factory.struct) {
+      return SystemItem.ZeroRoot.getRealRequirePath(this.info.factory.struct);
     }
-    return this;
+    return null;
   }
 
   /**
    * @returns {?CallableFunction}
    */
   getFactory() {
-    if (typeof this.info.factory === 'function') return this.info.factory;
-    if (this.getCollector()?.getFactory()) return this.getCollector().getFactory();
-    if (this.info.construct && typeof this.info.construct.factory === 'function') return this.info.construct.factory;
+    if (this.factory === undefined) {
+      this.factory = null;
+      let struct = this.getRealFactoryStruct();
+      if (struct === null && this.info.collector) {
+        const collector = this.getCollector();
+        if (collector) {
+          this.factory = collector.factory.bind(collector);
+        }
+      } else if (struct !== null) {
+        struct = require(struct);
+        this.factory = struct[this.info.factory.method].bind(struct);
+      }
+    }
+    return this.factory;
+  }
+
+  /**
+   * @returns {?string}
+   */
+  getRealConstruct() {
+    if (this.info.construct) {
+      return SystemItem.ZeroRoot.getRealRequirePath(this.info.construct);
+    }
     return null;
+  }
+
+  /**
+   * @returns {?NewableFunction}
+   */
+  getConstruct() {
+    if (this.construct === undefined) {
+      this.construct = null;
+      if (this.info.construct) {
+        this.construct = require(this.getRealConstruct());
+      }
+    }
+    return this.construct;
+  }
+
+  /**
+   * @returns {?import('zero-system/src/SystemCollector')}
+   */
+  getCollector() {
+    if (this.collector === undefined) {
+      this.collector = null;
+      if (this.info.collector) {
+        this.collector = SystemItem.SystemCollector.get(this.info.collector);
+      }
+    }
+    return this.collector;
   }
 
   /**
@@ -193,15 +299,16 @@ module.exports = class SystemItem {
   getObject() {
     if (this.object === null) {
       const factory = this.getFactory();
+      const Construct = this.getConstruct();
       
-      if (factory !== null) {
-        this.object = factory(this);
-      } else if (typeof this.info.construct === 'function') {
-        this.object = new this.info.construct();
+      if (factory === null) {
+        this.object = new Construct();
+      } else {
+        this.object = factory(this, Construct);
       }
     }
     const obj = this.object ?? null;
-    if (this.volatile) {
+    if (this.info.volatile) {
       this.object = null;
     }
     return obj;
@@ -239,6 +346,13 @@ module.exports = class SystemItem {
       definition = object[definition];
     }
     return definition.bind(object);
+  }
+
+  /**
+   * @returns {?T_SystemItemPack}
+   */
+  pack() {
+    return SystemItem.pack(this);
   }
 
 }

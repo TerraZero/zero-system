@@ -6,7 +6,7 @@ export default client;
 export function startup(context) {
   client.setContext(context);
 
-  client.socket.on('response', (response) => {
+  client.socket.on('response', response => {
     client.response(response);
   });
 }

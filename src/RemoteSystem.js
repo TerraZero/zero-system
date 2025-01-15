@@ -60,17 +60,25 @@ module.exports = class RemoteSystem {
     }
   }
 
-  async getRemoteInfo() {
-    const response = await this.socket.request('zero:remote-info');
-    
-    return response.items;
+  /**
+   * @param {boolean} force 
+   * @returns {Object}
+   */
+  async getRemoteInfo(force = false) {
+    if (this.remoteInfo === null || force) {
+      const response = await this.socket.request('zero:remote-info');
+      this.remoteInfo = response.items;
+    }
+    return this.remoteInfo;
   }
 
   /**
    * @param {string} service 
    */
   async get(service) {
+    const remoteInfo = await this.getRemoteInfo();
 
+    console.log(remoteInfo);
   }
 
 }

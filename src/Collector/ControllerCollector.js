@@ -9,8 +9,12 @@ module.exports = class ControllerCollector extends SystemCollector {
     super('controller', path, '**/*.controller.js');
   }
 
-  setCurrent(construct) {
-    super.setCurrent(construct);
+  /**
+   * @param {NewableFunction} construct 
+   * @param {string} file 
+   */
+  setCurrent(construct, file) {
+    super.setCurrent(construct, file);
     this.add(construct.id).setTag('base');
   }
 
@@ -18,7 +22,7 @@ module.exports = class ControllerCollector extends SystemCollector {
    * @param {string} name 
    * @param {string} path
    * @param {(string|CallableFunction)} callable 
-   * @returns {import('./SystemItem')}
+   * @returns {import('../SystemItem')}
    */
   addRoute(name, path, callable = null) {
     return this.add(this.getCurrent().id + '.' + name)
@@ -29,20 +33,19 @@ module.exports = class ControllerCollector extends SystemCollector {
   }
 
   /**
-   * @param {import('./SystemItem')} item 
-   * @returns {Object}
+   * @param {import('../SystemItem')} item 
+   * @param {NewableFunction} Construct
+   * @returns {*}
    */
-  doFactory(item) {
+  factory(item, Construct) {
     const id = item.getAttribute('base');
 
     if (id === null) {
-      const object = super.doFactory(item);
-      if (object === null) return new item.info.construct();
-      return object;
+      return new Construct();
     }
-    
-    return SystemCollector.getItem(id).getObject();
-  }
+
+    return SystemCollector.get(id);
+  } 
 
   getRoute(route) {
     const item = SystemCollector.getItem('controller.' + route);

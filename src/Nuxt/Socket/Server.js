@@ -4,6 +4,9 @@ const Item = require('./Item');
 
 module.exports = class Server {
 
+  static EVENT__SOCKET_CONNECT = 'socket:connection';
+  static EVENT__SOCKET_DISCONNECT = 'socket:disconnect';
+
   /**
    * @param {import('socket.io')} socket
    * @param {Logger} logger
@@ -48,7 +51,7 @@ module.exports = class Server {
           const index = this.clients.findIndex(v => v.id === client.id);
           this.clients.splice(index, 1);
 
-          await this.handler.trigger('socket:disconnect', {
+          await this.handler.trigger(Server.EVENT__SOCKET_DISCONNECT, {
             server: this,
             socket: this.socket,
             client,
@@ -60,7 +63,7 @@ module.exports = class Server {
           });
         });
 
-        await this.handler.trigger('socket:connection', {
+        await this.handler.trigger(Server.EVENT__SOCKET_CONNECT, {
           server: this,
           socket: this.socket,
           client,

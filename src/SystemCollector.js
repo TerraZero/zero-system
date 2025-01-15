@@ -1,14 +1,51 @@
 const Path = require('path');
 const Glob = require('glob');
 const SystemItem = require('./SystemItem');
-const Handler = require('events');
 const Logger = require('./Log/Logger');
 
 const register = [];
 const paths = [];
-const handler = new Handler();
+let isUnpacked = false;
 
 module.exports = class SystemCollector {
+
+  static EVENT__COLLECT = 'system:collect';
+
+  /**
+   * Lazy load ZeroRoot
+   * @returns {typeof import('./ZeroRoot')}
+   */
+  static get ZeroRoot() {
+    if (this._ZeroRoot === undefined) {
+      this._ZeroRoot = require('./ZeroRoot');
+    }
+    return this._ZeroRoot;
+  }
+
+  /**
+   * @returns {Object<string, import('./SystemItem').T_SystemItemPack>}
+   */
+  static pack() {
+    const pack = {};
+    for (const item of SystemCollector.register) {
+      const itemPack = item.pack();
+      if (itemPack === null) continue;
+      pack[itemPack.name] = itemPack;
+    }
+    return pack;
+  }
+
+  /**
+   * @param {import('./SystemItem').T_SystemItemPack[]} items 
+   */
+  static unpack(items) {
+    Logger.base.debug('Load SystemCollector in unpack mode with {num} items.', { num: items.length });
+    isUnpacked = true;
+    for (const item of items) {
+      this.setItem(new SystemItem(item.name, null, item.info));
+      Logger.base.debug('- Load item {service} -> {file}', { service: item.name, file: item.info.file });
+    }
+  }
 
   /** @returns {SystemItem[]} */
   static get register() {
@@ -18,11 +55,6 @@ module.exports = class SystemCollector {
   /** @returns {string[]} */
   static get paths() {
     return paths;
-  }
-
-  /** @returns {Handler} */
-  static get events() {
-    return handler;
   }
 
   /**
@@ -71,7 +103,7 @@ module.exports = class SystemCollector {
 
   /**
    * @param {CallableFunction} predicate 
-   * @returns {SystemItem.T_SystemItemInfo[]}
+   * @returns {array}
    */
   static each(predicate) {
     const array = [];
@@ -92,6 +124,19 @@ module.exports = class SystemCollector {
       if (predicate(item)) return item;
     }
     return null;
+  }
+
+  /**
+   * @param {CallableFunction} predicate 
+   * @returns {SystemItem[]}
+   */
+  static finds(predicate) {
+    const array = [];
+
+    for (const item of this.register) {
+      if (predicate(item)) array.push(item);
+    }
+    return array;
   }
 
   /**
@@ -116,7 +161,7 @@ module.exports = class SystemCollector {
    * @returns {this}
    */
   static addCollector(collector) {
-    SystemCollector.set('collector.' + collector.prefix, collector, {
+    SystemCollector.set(collector.id, collector, {
       tags: ['collector'],
     });
     return this;
@@ -127,12 +172,15 @@ module.exports = class SystemCollector {
    * @returns {this}
    */
   static collect(reset = false) {
+    if (isUnpacked) {
+      throw new Error('Collect method is forbidden in unpack mode.');
+    }
     SystemCollector.each(item => {
       if (item.hasTag('collector')) {
         item.getObject().collect(reset);
       }
     });
-    this.events.emit('system:collect', this);
+    this.ZeroRoot.base.events.emit(SystemCollector.EVENT__COLLECT, this);
     return this;
   }
 
@@ -140,20 +188,20 @@ module.exports = class SystemCollector {
    * @param {string} prefix 
    * @param {string} path
    * @param {string} pattern
-   * @param {CallableFunction} factory
-   * @param {CallableFunction} validate
    */
-  constructor(prefix, path, pattern, factory = null, validate = null) {
+  constructor(prefix, path, pattern) {
     this.prefix = prefix;
     this.path = path;
     this.pattern = pattern;
-    this.factory = factory;
-    this.validate = validate;
     this.logger = Logger.base.channel(prefix);
 
     this._current = null;
     this._file = null;
     this._collected = [];
+  }
+
+  get id() {
+    return 'collector.' + this.prefix;
   }
 
   collect(reset = false) {
@@ -204,26 +252,19 @@ module.exports = class SystemCollector {
    */
   add(name) {
     return SystemCollector.add(this.prefix + '.' + name)
-      .setCollector(this)
-      .setConstruct(this.getCurrent())
+      .setCollector(this.id)
+      .setConstruct(this._file)
       .setFile(this._file)
       .setTag(this.prefix);
   }
 
   /**
-   * @returns {CallableFunction}
-   */
-  getFactory() {
-    return this.factory ?? this.doFactory.bind(this);
-  }
-
-  /**
    * @param {SystemItem} item 
-   * @returns {Object}
+   * @param {NewableFunction} Construct
+   * @returns {*}
    */
-  doFactory(item) {
-    if (item.info.construct && typeof item.info.construct.factory === 'function') return item.info.construct.factory(item);
-    return null;
+  factory(item, Construct) {
+    return new Construct();
   }
 
 }

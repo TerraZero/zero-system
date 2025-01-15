@@ -13,18 +13,11 @@ module.exports = class ModuleCollector extends SystemCollector {
 
   /**
    * @param {SystemItem} item 
-   * @returns {Object}
+   * @param {NewableFunction} Construct
+   * @returns {*}
    */
-  doFactory(item) {
-    if (item.info.construct) {
-      if (typeof item.info.construct.factory === 'function') {
-        return item.info.construct.factory(item, this.root);
-      } else {
-        return new item.info.construct(this.root);
-      }
-    }
-    
-    return null;
+  factory(item, Construct) {
+    return new Construct(this.root);
   }
 
 }
