@@ -48,9 +48,14 @@ module.exports = class SystemItem {
    */
   static pack(item) {
     if (!item.info.file) return null;
+    let file = item.info.file;
+    if (file.startsWith('~/')) {
+      file = file.substring(2);
+    }
     return {
       name: item.name,
       info: item.info,
+      file,
     };
   }
 
