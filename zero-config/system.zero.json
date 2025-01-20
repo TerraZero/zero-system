@@ -19,6 +19,14 @@
       "script": {
         "path": "custom/scripts/${file}"
       }
-    }
+    },
+    "after": [
+      {
+        "type": "registry",
+        "file": "custom/namespaces/remote.namespace.js",
+        "namepattern": "^(remote\\..*)$",
+        "include": "_collection"
+      }
+    ]
   }
 }

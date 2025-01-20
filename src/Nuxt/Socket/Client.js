@@ -46,6 +46,9 @@ module.exports = class Client {
     return this._socket;
   }
 
+  /**
+   * @param {import('../../RemoteSystem').T_NuxtContext} context 
+   */
   setContext(context) {
     this.context = context;
   }
