@@ -111,4 +111,13 @@ module.exports = class Logger {
     console.log(this.id, 'EXCEPTION:', error);
   }
 
+  /**
+   * @param {Error} error
+   * @param {string} message
+   * @param {(Array|Object<string, string>|StringInserter)} placeholders
+   */
+  debugException(error, message = null, placeholders = {}) {
+    console.log(this.id, 'DEBUG EXCEPTION:', error);
+  }
+
 }

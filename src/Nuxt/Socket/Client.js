@@ -57,14 +57,15 @@ module.exports = class Client {
     AsyncPromise.resolve(response.meta.uuid, response);
   }
 
-  async request(event, ...args) {
+  async request(event, data) {
     const point = new AsyncPromise();
-    this.socket.emit(event, {
+    this.socket.emit('request', {
+      event, 
       meta: {
         uuid: point.uuid,
         session: this.session,
       },
-      args,
+      data,
     });
     return point.promise;
   }

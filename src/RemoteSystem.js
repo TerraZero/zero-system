@@ -16,6 +16,19 @@ const Handler = require('events');
 
 module.exports = class RemoteSystem {
 
+  /** @returns {RemoteSystem} */
+  static get instance() {
+    return this._instance;
+  }
+
+  /**
+   * @param {string} id 
+   * @returns {?Object}
+   */
+  static get(id) {
+    return this.instance.get(id);
+  }
+
   /**
    * @param {string} name 
    * @returns 
@@ -49,6 +62,11 @@ module.exports = class RemoteSystem {
    * @param {Object<string, NewableFunction>} namespace
    */
   constructor(socket, namespace) {
+    if (this.constructor.instance === undefined) {
+      this.constructor._instance = this;
+    } else {
+      throw new Error('Only one RemoteSystem can be created.');
+    }
     this.context = null;
     this.socket = socket;
     this.namespace = namespace;

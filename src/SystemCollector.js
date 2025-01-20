@@ -102,8 +102,9 @@ module.exports = class SystemCollector {
   }
 
   /**
-   * @param {CallableFunction} predicate 
-   * @returns {array}
+   * @template T
+   * @param {(item: SystemItem) => ?T} predicate 
+   * @returns {T[]}
    */
   static each(predicate) {
     const array = [];
@@ -116,7 +117,7 @@ module.exports = class SystemCollector {
   }
 
   /**
-   * @param {CallableFunction} predicate 
+   * @param {(item: SystemItem) => boolean} predicate 
    * @returns {?SystemItem}
    */
   static find(predicate) {
@@ -127,7 +128,7 @@ module.exports = class SystemCollector {
   }
 
   /**
-   * @param {CallableFunction} predicate 
+   * @param {(item: SystemItem) => boolean} predicate 
    * @returns {SystemItem[]}
    */
   static finds(predicate) {
@@ -259,9 +260,10 @@ module.exports = class SystemCollector {
   }
 
   /**
+   * @template T
    * @param {SystemItem} item 
-   * @param {NewableFunction} Construct
-   * @returns {*}
+   * @param {new (...args) => T} Construct
+   * @returns {T}
    */
   factory(item, Construct) {
     return new Construct();

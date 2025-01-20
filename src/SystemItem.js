@@ -143,32 +143,11 @@ module.exports = class SystemItem {
   /**
    * Define this item as remote item. If local than create a local instance for this item.
    * 
-   * If local is null: Only a proxy object will be returned.
-   * If local is set: The object will be created locally and the connection proxy will be givin.
-   * 
-   * @param {string} local 
    * @returns {this}
    */
-  setRemote(local = null) {
+  setRemote() {
     this.setTag('remote');
-    if (local) {
-      this.setAttribute('local', local);
-    }
     return this;
-  }
-
-  /**
-   * @returns {boolean}
-   */
-  isRemote() {
-    return this.hasTag('remote');
-  }
-
-  /**
-   * @returns {(string|null)}
-   */
-  getRemoteLocal() {
-    return this.getAttribute('local');
   }
 
   /**

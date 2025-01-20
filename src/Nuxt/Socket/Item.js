@@ -1,7 +1,18 @@
 module.exports = class Item {
 
   /**
-   * @param {import('./SocketServer').default} socket 
+   * Lazy load Server
+   * @returns {typeof import('./Server')}
+   */
+  static get Server() {
+    if (this._Server === undefined) {
+      this._Server = require('./Server');
+    }
+    return this._Server;
+  }
+
+  /**
+   * @param {import('./Server')} socket 
    * @param {import('socket.io').Socket} mount 
    */
   constructor(socket, mount) {
@@ -37,8 +48,27 @@ module.exports = class Item {
     });
   }
 
+  /**
+   * @param {import('./Server').T_Request} request 
+   * @param {any} data 
+   */
+  async response(request, data = null) {
+    await this.socket.events.trigger(Item.Server.EVENT__SOCKET_RESPONSE, { request, data });
+    this.mount.send('response', {
+      meta: request.meta,
+      data,
+    });
+  }
+
+  /**
+   * @param {string} event 
+   * @param {(client: Item, ...args: any)} listener 
+   * @returns 
+   */
   on(event, listener) {
-    this.mount.on(event, listener);
+    this.mount.on(event, (...args) => {
+      listener(this, ...args);
+    });
     return this;
   }
 
