@@ -6,7 +6,7 @@ import namespace from '../namespaces/remote.namespace';
 export default new RemoteSystem(new Client(), namespace);
 
 /**
- * @param {RemoteSystem} rs 
+ * @param {RemoteSystem} rs
  * @param {Object} context 
  */
 export function startup(rs, context) {
