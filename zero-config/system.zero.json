@@ -24,7 +24,9 @@
       {
         "type": "registry",
         "file": "custom/namespaces/remote.namespace.js",
-        "namepattern": "^(remote\\..*)$",
+        "filter": [
+          "info.tags:includes(remote)"
+        ],
         "include": "_collection"
       }
     ]
