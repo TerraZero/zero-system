@@ -1,4 +1,4 @@
-const StringUtil = require('../Util/StringUtil');
+const StringUtil = require('zero-util/src/StringUtil');
 
 let _debug = false;
 let _instance = null;

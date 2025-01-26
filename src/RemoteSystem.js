@@ -11,9 +11,6 @@
  * @property {Object} $axios - Die Axios-Instanz (falls axios Module installiert ist).
  */
 
-
-const Handler = require('events');
-
 module.exports = class RemoteSystem {
 
   /** @returns {RemoteSystem} */
@@ -27,34 +24,6 @@ module.exports = class RemoteSystem {
    */
   static get(id) {
     return this.instance.get(id);
-  }
-
-  /**
-   * @param {string} name 
-   * @returns 
-   */
-  static createRemoteProxy(name) {
-    return new Proxy({}, {
-
-      get(target, prop, receiver) {
-        return async (...args) => {
-          return await RemoteSystem.socketCall(name, prop, {
-            args,
-          });
-        };
-      },
-
-    });
-  }
-
-  /**
-   * @param {string} name 
-   * @param {string} prop 
-   * @param {Object} data 
-   * @returns {*}
-   */
-  static async socketCall(name, prop, data = {}) {
-    console.log('RemoteSystem.socketCall', name, prop, data);
   }
 
   /**
@@ -72,7 +41,6 @@ module.exports = class RemoteSystem {
     this.namespace = namespace;
     this.remoteInfo = null;
     this.services = {};
-    this.handler = new Handler();
     this.resolvers = [];
   }
 
@@ -84,8 +52,8 @@ module.exports = class RemoteSystem {
     this.socket.setContext(context);
     this.addResolver(this.resolver.bind(this), -100);
     for (const id in this.namespace) {
-      if (typeof this.namespace[id].onBoot === 'function') {
-        this.namespace[id].onBoot(this);
+      if (typeof this.namespace[id].setupInit === 'function') {
+        this.namespace[id].setupInit(this);
       }
     }
   }
@@ -105,8 +73,10 @@ module.exports = class RemoteSystem {
    * @param {string} id 
    * @returns {?Object}
    */
-  resolver(id) {
-    if (this.services[id] !== undefined) return this.services[id];
+  async resolver(id) {
+    if (this.services[id] !== undefined) {
+      return this.services[id];
+    }
     if (this.namespace[id]) {
       if (typeof this.namespace[id].factory === 'function') {
         return this.namespace[id].factory(this);

@@ -3,18 +3,31 @@
  * @property {string} event
  * @property {any} data
  * @property {Object} meta
+ * @property {string} meta.uuid
+ * @property {import('../../Util/ErrorUtil').T_ErrorSerialize} meta.error
  */
 
+/**
+ * @callback C_Handler
+ * @param {T_Request} request
+ * @param {import('./Mount')} mount
+ * @param {(data: any) => void} answer
+ */
+
+/**
+ * @typedef {Object} T_Response
+ * @property {Object} meta
+ * @property {string} meta.uuid
+ * @property {import('../../Util/ErrorUtil').T_ErrorSerialize} meta.error
+ * @property {any} data
+ */
+
+const AsyncHandler = require('zero-util/src/AsyncHandler');
+
 const Logger = require('../../Log/Logger');
-const AsyncHandler = require('../../Util/AsyncHandler');
-const Item = require('./Item');
+const Mount = require('./Mount');
 
 module.exports = class Server {
-
-  static EVENT__SOCKET_CONNECT = 'socket:connection';
-  static EVENT__SOCKET_DISCONNECT = 'socket:disconnect';
-  static EVENT__SOCKET_REQUEST = 'socket:request';
-  static EVENT__SOCKET_RESPONSE = 'socket:response';
 
   /**
    * @param {import('socket.io')} socket
@@ -47,45 +60,43 @@ module.exports = class Server {
     this.logger.debug('Init socket server');
 
     try {
-      this.socket.on('connection', async mount => {
-        this.logger.debug('Client {id} connect ...', { id: mount.id });
+      this.socket.on('connection', async socket => {
+        this.logger.debug('Client {id} connect ...', { id: socket.id });
 
-        const client = new Item(this, mount);
-        client.init();
-        this.clients.push(client);
+        const mount = new Mount(socket, this.events, this.handlers);
+        mount.init();
+        this.clients.push(mount);
 
-        client.on('disconnect', async () => {
-          this.logger.debug('Client {id} disconnect ...', { id: client.id });
+        mount.socket.on('disconnect', async () => {
+          this.logger.debug('Client {id} disconnect ...', { id: mount.id });
 
-          const index = this.clients.findIndex(v => v.id === client.id);
+          const index = this.clients.findIndex(v => v.id === mount.id);
           this.clients.splice(index, 1);
 
-          await this.events.trigger(Server.EVENT__SOCKET_DISCONNECT, {
+          await this.events.trigger(Mount.EVENT__SOCKET_DISCONNECT, {
             server: this,
             socket: this.socket,
-            client,
+            mount,
           });
 
           this.broadcast('server:controller', 'info', {
             type: 'disconnect',
-            client: client.ident,
+            mount: mount.id,
           });
         });
 
-        client.on('request', this.onRequest.bind(this));
-
-        await this.events.trigger(Server.EVENT__SOCKET_CONNECT, {
+        await this.events.trigger(Mount.EVENT__SOCKET_CONNECT, {
           server: this,
           socket: this.socket,
-          client,
+          mount,
         });
 
         this.broadcast('server:controller', 'info', {
           type: 'connect',
-          client: client.ident,
+          mount: mount.id,
         });
 
-        this.logger.debug('Client {id} connected', { id: client.id });
+        this.logger.debug('Client {id} connected', { id: mount.id });
       });
     } catch (error) {
       this.logger.exception(error, 'Fatal error');
@@ -105,44 +116,16 @@ module.exports = class Server {
   }
 
   /**
-   * @param {string} name 
-   * @param {(request: T_Request, client: Object, answer) => any} handler 
+   * @param {string} event 
+   * @param {C_Handler} handler 
    * @param {number} prio 
    * @returns {this}
    */
-  addHandler(name, handler, prio = 0) {
-    this.handlers[name] ??= [];
-    this.handlers[name].push({ handler, prio });
-    this.handlers[name].sort((a, b) => a.prio - b.prio);
+  addHandler(event, handler, prio = 0) {
+    this.handlers[event] ??= [];
+    this.handlers[event].push({ handler, prio });
+    this.handlers[event].sort((a, b) => a.prio - b.prio);
     return this;
-  }
-
-  /**
-   * @param {Item} client
-   * @param {T_Request} request 
-   */
-  async onRequest(client, request) {
-    await this.events.trigger(Server.EVENT__SOCKET_REQUEST, { client, request });
-    if (this.handlers[request.event]) {
-      try {
-        let response = undefined;
-        for (const handler of this.handlers[request.event]) {
-          await handler.handler(request, client, (value = null) => {
-            response = value;
-          });
-          if (response !== undefined) break;
-        }
-        client.response(request, response);
-      } catch (e) {
-        this.logger.debugException(e);
-        request.meta.error = e.message;
-        request.meta.exception = e;
-        client.response(request);
-      }
-    } else {
-      request.meta.error = `No handlers for ${request.event} defined.`;
-      client.response(request);
-    }
   }
 
 }

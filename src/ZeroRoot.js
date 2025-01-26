@@ -1,11 +1,12 @@
 const Path = require('path');
 const scaffold = require('zero-scaffold');
 
+const StringUtil = require('zero-util/src/StringUtil');
+const AsyncHandler = require('zero-util/src/AsyncHandler');
+
 const SystemCollector = require('./SystemCollector');
 const ModuleCollector = require('./Collector/ModuleCollector');
 const ServiceCollector = require('./Collector/ServiceCollector');
-const StringUtil = require('./Util/StringUtil');
-const AsyncHandler = require('./Util/AsyncHandler');
 
 module.exports = class ZeroRoot {
 

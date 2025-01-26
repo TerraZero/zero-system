@@ -7,14 +7,24 @@ const { io } = require('socket.io-client');
 const { v4: UUID } = require('uuid');
 const Cookies = require('js-cookie');
 
-const AsyncPromise = require('../../Util/AsyncPromise');
+const AsyncHandler = require('zero-util/src/AsyncHandler');
+
+const Mount = require('./Mount');
 
 module.exports = class Client {
 
   constructor(socket = null) {
     this.context = null;
+    this.events = new AsyncHandler();
     this._socket = socket;
     this._session = null;
+
+    this.events.on(Mount.EVENT__MOUNT_SEND_REQUEST, this.onSendAddSession.bind(this));
+    this.events.on(Mount.EVENT__MOUNT_SEND_RESPONSE, this.onSendAddSession.bind(this));
+
+    this.mount = new Mount(this.socket, this.events);
+    this.mount.setId(this.session.ident);
+    this.mount.init();
   }
 
   /** @returns {T_Session} */
@@ -26,7 +36,7 @@ module.exports = class Client {
         this._session = {
           ident: UUID(),
         };
-        Cookies.set('zero.socket.session', JSON.stringify(this._session), { path: '', expires: 2 });
+        Cookies.set('zero.socket.session', JSON.stringify(this._session), { path: '', expires: 5 });
       } else {
         this._session = session;
       }
@@ -42,6 +52,8 @@ module.exports = class Client {
       } else {
         this._socket = io(`http://${this.context.req.headers.host}`);
       }
+      if (this.mount)
+      this._socket.on('response', this.onResponse.bind(this));
     }
     return this._socket;
   }
@@ -53,21 +65,12 @@ module.exports = class Client {
     this.context = context;
   }
 
-  response(response) {
-    AsyncPromise.resolve(response.meta.uuid, response);
-  }
-
-  async request(event, data) {
-    const point = new AsyncPromise();
-    this.socket.emit('request', {
-      event, 
-      meta: {
-        uuid: point.uuid,
-        session: this.session,
-      },
-      data,
-    });
-    return point.promise;
+  /**
+   * @param {{ request: import('./Server').T_Request, response: import('./Server').T_Response }} param0
+   */
+  onSendAddSession({ request, response }) {
+    if (request) request.meta.session = this.session;
+    if (response) response.meta.session = this.session;
   }
 
 }
