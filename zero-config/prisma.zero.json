@@ -11,8 +11,7 @@
         ],
         "append": [
           ""
-        ],
-        "mode": "replace"
+        ]
       }
     },
     "after": [

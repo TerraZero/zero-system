@@ -2,19 +2,16 @@
   "scaffold": {
     "paths": {
       "nuxt-plugin": {
-        "path": "custom/plugins/${file}",
-        "mode": "replace"
+        "path": "custom/plugins/${file}"
       },
       "nuxt-module": {
-        "path": "custom/modules/${file}",
-        "mode": "replace"
+        "path": "custom/modules/${file}"
       },
       "system": {
         "path": "custom/${file}"
       },
       "module": {
-        "path": "custom/system/modules/${module}/${file}",
-        "mode": "replace"
+        "path": "custom/system/modules/${module}/${file}"
       },
       "script": {
         "path": "custom/scripts/${file}"
@@ -25,7 +22,7 @@
         "type": "registry",
         "file": "custom/namespaces/remote.namespace.js",
         "filter": [
-          "info.tags:includes(remote)"
+          "info.tags:includes(rmi)"
         ],
         "include": "_collection"
       }
