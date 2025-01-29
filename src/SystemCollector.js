@@ -68,6 +68,20 @@ module.exports = class SystemCollector {
   }
 
   /**
+   * @param {string} path 
+   * @returns {this}
+   */
+  static addModules(path) {
+    const files = Glob.sync('**/*.module.js', {
+      cwd: path,
+    });
+    for (const file of files) {
+      this.addPath(Path.join(path, file, '..'));
+    }
+    return this;
+  }
+
+  /**
    * @param {SystemItem} item 
    * @returns {this}
    */

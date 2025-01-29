@@ -7,6 +7,7 @@ const AsyncHandler = require('zero-util/src/AsyncHandler');
 const SystemCollector = require('./SystemCollector');
 const ModuleCollector = require('./Collector/ModuleCollector');
 const ServiceCollector = require('./Collector/ServiceCollector');
+const RemoteCollector = require('./Collector/RemoteCollector');
 
 module.exports = class ZeroRoot {
 
@@ -112,6 +113,7 @@ module.exports = class ZeroRoot {
 
     SystemCollector.addCollector(new ModuleCollector(this));
     SystemCollector.addCollector(new ServiceCollector());
+    SystemCollector.addCollector(new RemoteCollector());
     SystemCollector.collect();
     this.setup('boot', this);
     SystemCollector.collect();

@@ -22,7 +22,7 @@
         "type": "registry",
         "file": "custom/namespaces/remote.namespace.js",
         "filter": [
-          "info.tags:includes(rmi)"
+          "info.tags:includes(remote, form)"
         ],
         "include": "_collection"
       }
