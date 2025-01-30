@@ -3,12 +3,17 @@ const SystemCollector = require('../SystemCollector');
 module.exports = class ModuleCollector extends SystemCollector {
 
   /**
-   * @param {string} path 
+   * @param {SystemCollector} collector 
+   */
+  static define(collector) {
+    collector.add('module');
+  }
+
+  /**
    * @param {import('./ZeroRoot')} root
    */
-  constructor(root, path = '') {
+  constructor(path = '') {
     super('module', path, '**/*.module.js');
-    this.root = root;
   }
 
   /**

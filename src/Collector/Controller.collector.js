@@ -3,6 +3,13 @@ const SystemCollector = require('../SystemCollector');
 module.exports = class ControllerCollector extends SystemCollector {
 
   /**
+   * @param {SystemCollector} collector 
+   */
+  static define(collector) {
+    collector.add('controller');
+  }
+
+  /**
    * @param {string} path 
    */
   constructor(path = 'Controller') {

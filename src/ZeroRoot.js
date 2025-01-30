@@ -5,9 +5,6 @@ const StringUtil = require('zero-util/src/StringUtil');
 const AsyncHandler = require('zero-util/src/AsyncHandler');
 
 const SystemCollector = require('./SystemCollector');
-const ModuleCollector = require('./Collector/ModuleCollector');
-const ServiceCollector = require('./Collector/ServiceCollector');
-const RemoteCollector = require('./Collector/RemoteCollector');
 
 module.exports = class ZeroRoot {
 
@@ -29,6 +26,12 @@ module.exports = class ZeroRoot {
     if (Path.isAbsolute(fullpath)) {
       if (fullpath.startsWith(Path.normalize(this.base.root))) {
         return Path.join(this.base.subroot, fullpath.substring(Path.normalize(this.base.root).length)).replace(/\\/g, '/');
+      }
+      let index = -1;
+      if ((index = fullpath.indexOf('\\node_modules\\')) !== -1) {
+        if (require.resolve(fullpath.substring(index + '\\node_modules\\'.length))) {
+          return fullpath.substring(index + '\\node_modules\\'.length);
+        }
       }
     } else {
       if (require.resolve(fullpath)) {
@@ -111,9 +114,10 @@ module.exports = class ZeroRoot {
       this.doSetup();
     });
 
-    SystemCollector.addCollector(new ModuleCollector(this));
-    SystemCollector.addCollector(new ServiceCollector());
-    SystemCollector.addCollector(new RemoteCollector());
+    SystemCollector.addCollector(new SystemCollector('collector', 'Collector', '**/*.collector.js'));
+    // Collect all collectors
+    SystemCollector.collect();
+    // And than collect all
     SystemCollector.collect();
     this.setup('boot', this);
     SystemCollector.collect();
