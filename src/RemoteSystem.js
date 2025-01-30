@@ -11,6 +11,8 @@
  * @property {Object} $axios - Die Axios-Instanz (falls axios Module installiert ist).
  */
 
+const AsyncHandler = require('zero-util/src/AsyncHandler');
+
 module.exports = class RemoteSystem {
 
   /** @returns {RemoteSystem} */
@@ -42,6 +44,7 @@ module.exports = class RemoteSystem {
     this.remoteInfo = null;
     this.services = {};
     this.resolvers = [];
+    this.events = new AsyncHandler();
   }
 
   /**
