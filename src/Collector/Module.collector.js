@@ -17,12 +17,12 @@ module.exports = class ModuleCollector extends SystemCollector {
   }
 
   /**
-   * @param {SystemItem} item 
+   * @param {import('../SystemItem')} item 
    * @param {NewableFunction} Construct
    * @returns {*}
    */
   factory(item, Construct) {
-    return new Construct(this.root);
+    return new Construct(SystemCollector.get('root'));
   }
 
 }
