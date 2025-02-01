@@ -1,13 +1,8 @@
-/**
- * @typedef T_Session
- * @property {string} ident
- */
-
 const { io } = require('socket.io-client');
-const { v4: UUID } = require('uuid');
 const Cookies = require('js-cookie');
 
 const AsyncHandler = require('zero-util/src/AsyncHandler');
+const Logger = require('zero-system/src/Log/Logger');
 
 const Mount = require('./Mount');
 
@@ -17,29 +12,24 @@ module.exports = class Client {
     this.context = null;
     this.events = new AsyncHandler();
     this._socket = socket;
-    this._session = null;
+    this._session = undefined;
 
+    this.events.on(Mount.EVENT__MOUNT_GET_RESPONSE, this.onGetResponse.bind(this));
     this.events.on(Mount.EVENT__MOUNT_SEND_REQUEST, this.onSendAddSession.bind(this));
     this.events.on(Mount.EVENT__MOUNT_SEND_RESPONSE, this.onSendAddSession.bind(this));
 
     this.mount = new Mount(this.socket, this.events);
-    this.mount.setId(this.session.ident);
+    if (this.session !== null) {
+      Logger.base.debug('Has session {session}', { session: this._session });
+      this.mount.setId(this.session);
+    }
     this.mount.init();
   }
 
-  /** @returns {T_Session} */
+  /** @returns {?string} */
   get session() {
-    if (this._session === null) {
-      const session = JSON.parse(Cookies.get('zero.socket.session') ?? '{}');
-
-      if (!session.ident) {
-        this._session = {
-          ident: UUID(),
-        };
-        Cookies.set('zero.socket.session', JSON.stringify(this._session), { path: '', expires: 5 });
-      } else {
-        this._session = session;
-      }
+    if (this._session === undefined) {
+      this._session = Cookies.get('zero.socket.session') ?? null;
     }
     return this._session;
   }
@@ -58,6 +48,14 @@ module.exports = class Client {
     return this._socket;
   }
 
+  setSession(id, expired = 5) {
+    this._session = id;
+    this.mount.setId(id);
+    Cookies.set('zero.socket.session', this._session, { path: '', expires });
+    Logger.base.debug('Set session {session}', { session: this._session });
+    return this;
+  }
+
   /**
    * @param {import('../../RemoteSystem').T_NuxtContext} context 
    */
@@ -66,11 +64,20 @@ module.exports = class Client {
   }
 
   /**
-   * @param {{ request: import('./Server').T_Request, response: import('./Server').T_Response }} param0
+   * @param {{ request: import('./Server').T_Request, response: import('./Server').T_Response }} params
    */
   onSendAddSession({ request, response }) {
     if (request) request.meta.session = this.session;
     if (response) response.meta.session = this.session;
+  }
+
+  /**
+   * @param {{ response: import('./Server').T_Response }} params
+   */
+  onGetResponse({ response }) {
+    if (response.meta.session && this.session !== response.meta.session) {
+      this.setSession(response.meta.session);
+    }
   }
 
 }

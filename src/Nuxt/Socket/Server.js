@@ -5,6 +5,7 @@
  * @property {Object} meta
  * @property {string} meta.uuid
  * @property {import('../../Util/ErrorUtil').T_ErrorSerialize} meta.error
+ * @property {string} meta.session
  */
 
 /**
@@ -19,6 +20,7 @@
  * @property {Object} meta
  * @property {string} meta.uuid
  * @property {import('../../Util/ErrorUtil').T_ErrorSerialize} meta.error
+ * @property {string} meta.session
  * @property {any} data
  */
 
