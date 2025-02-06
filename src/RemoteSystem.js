@@ -15,6 +15,11 @@ const AsyncHandler = require('zero-util/src/AsyncHandler');
 
 module.exports = class RemoteSystem {
 
+  /** @returns {string} */
+  static get REQUEST() {
+    return '{{REQUEST}}';
+  }
+
   /** @returns {RemoteSystem} */
   static get instance() {
     return this._instance;
@@ -26,6 +31,14 @@ module.exports = class RemoteSystem {
    */
   static get(id) {
     return this.instance.get(id);
+  }
+
+  /**
+   * @param {string} id 
+   * @returns {?Object}
+   */
+  static getComponent(id) {
+    return this.instance.getComponent(id);
   }
 
   /**
@@ -43,6 +56,7 @@ module.exports = class RemoteSystem {
     this.namespace = namespace;
     this.remoteInfo = null;
     this.services = {};
+    this.components = {};
     this.resolvers = [];
     this.events = new AsyncHandler();
   }
@@ -96,6 +110,10 @@ module.exports = class RemoteSystem {
    * @returns {this}
    */
   set(id, service) {
+    if (id.startsWith('#')) {
+      this.setComponent(id.substring(1), service);
+      return this;
+    }
     this.services[id] = service;
     return this;
   }
@@ -105,12 +123,35 @@ module.exports = class RemoteSystem {
    * @returns {?Object}
    */
   async get(id) {
+    if (id.startsWith('#')) {
+      return this.getComponent(id.substring(1));
+    }
     for (const resolver of this.resolvers) {
       const service = await resolver.resolver(id);
       if (service !== null) return service;
     }
     this.services[id] = null;
     return null;
+  }
+
+  setComponent(name, component) {
+    this.components[name] = component;
+    return this;
+  }
+
+  getComponent(name) {
+    return this.components[name];
+  }
+
+  async executeActions(actions) {
+    for (const action of actions) {
+      await this.executeAction(action);
+    }
+  }
+
+  async executeAction(action) {
+    const object = await this.get(action.service);
+    await object[action.method](...action.params);
   }
 
 }

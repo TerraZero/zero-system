@@ -3,13 +3,29 @@ const AsyncPromise = require('zero-util/src/AsyncPromise');
 
 const Logger = require('../../Log/Logger');
 
+/**
+ * @typedef {Object} T_RequestEvent
+ * @property {import('./Server').T_Request} request
+ * @property {AsyncPromise} promise
+ * @property {import('./Mount')} mount
+ */
+
+/**
+ * @typedef {Object} T_ResponseEvent
+ * @property {import('./Server').T_Request} request
+ * @property {import('./Mount')} mount
+ */
+
 module.exports = class Mount {
 
   static EVENT__SOCKET_CONNECT = 'socket:connection';
   static EVENT__SOCKET_DISCONNECT = 'socket:disconnect';
   static EVENT__SOCKET_INIT = 'socket:init';
   static EVENT__MOUNT_SEND_REQUEST = 'socket:request:send';
+  static EVENT__MOUNT_SEND_REQUEST_POST = 'socket:request:sendpost';
   static EVENT__MOUNT_SEND_RESPONSE = 'socket:response:send';
+  static EVENT__MOUNT_SEND_RESPONSE_POST = 'socket:response:sendpost';
+  static EVENT__MOUNT_GET_REQUEST_PREPARE = 'socket:request:getprepare';
   static EVENT__MOUNT_GET_REQUEST = 'socket:request:get';
   static EVENT__MOUNT_GET_RESPONSE = 'socket:response:get';
   static EVENT__MOUNT_GET_RESPONSE_REJECT = 'socket:response:reject';
@@ -74,6 +90,7 @@ module.exports = class Mount {
       data,
     };
     await this.events.trigger(Mount.EVENT__MOUNT_SEND_REQUEST, { request, promise, mount: this });
+    await this.events.trigger(Mount.EVENT__MOUNT_SEND_REQUEST_POST, { request, promise, mount: this });
     this.logger.debug('Request {request} - {uuid}', { request: request.event, uuid: request.meta.uuid });
     this.socket.emit('request', request);
     return promise.timeout(meta.timeout).promise;
@@ -92,6 +109,7 @@ module.exports = class Mount {
       data,
     };
     await this.events.trigger(Mount.EVENT__MOUNT_SEND_RESPONSE, { response, mount: this });
+    await this.events.trigger(Mount.EVENT__MOUNT_SEND_RESPONSE_POST, { request, mount: this });
     this.logger.debug('Response {response} - {uuid}', { response: request.event, uuid: response.meta.uuid });
     this.socket.emit('response', response);
   }
@@ -101,6 +119,7 @@ module.exports = class Mount {
    */
   async onRequest(request) {
     this.logger.debug('On request {request} - {uuid}', { request: request.event, uuid: request.meta.uuid });
+    await this.events.trigger(Mount.EVENT__MOUNT_GET_REQUEST_PREPARE, { request, mount: this });
     await this.events.trigger(Mount.EVENT__MOUNT_GET_REQUEST, { request, mount: this });
     if (this.handlers[request.event]) {
       try {

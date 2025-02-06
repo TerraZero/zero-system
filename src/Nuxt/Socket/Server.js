@@ -1,3 +1,23 @@
+const AsyncHandler = require('zero-util/src/AsyncHandler');
+
+const Logger = require('../../Log/Logger');
+const Mount = require('./Mount');
+
+/**
+ * @callback C_SessionHandler
+ * @param {Mount.T_RequestEvent} event
+ * @param {string} key
+ * @param {any} value
+ * @returns {Promise<any>}
+ */
+
+/**
+ * @callback C_SessionFunction
+ * @param {string} key
+ * @param {any} value
+ * @returns {Promise<any>}
+ */
+
 /**
  * @typedef {Object} T_Request
  * @property {string} event
@@ -6,6 +26,9 @@
  * @property {string} meta.uuid
  * @property {import('../../Util/ErrorUtil').T_ErrorSerialize} meta.error
  * @property {string} meta.session
+ * @property {Object} server
+ * @property {number} server.timestamp
+ * @property {C_SessionFunction} server.session
  */
 
 /**
@@ -24,11 +47,6 @@
  * @property {any} data
  */
 
-const AsyncHandler = require('zero-util/src/AsyncHandler');
-
-const Logger = require('../../Log/Logger');
-const Mount = require('./Mount');
-
 module.exports = class Server {
 
   /**
@@ -40,10 +58,41 @@ module.exports = class Server {
     this.clients = [];
     this.logger = null;
     this.events = new AsyncHandler();
+
+    this.events.on(Mount.EVENT__MOUNT_GET_REQUEST_PREPARE, (event) => {
+      event.request.server = {
+        session: async (key, value) => {
+          if (this.sessionHandler === null) {
+            throw new Error('No session handler awailable.');
+          } else {
+            return await this.sessionHandler(event, key, value);
+          }
+        },
+        timestamp: this.timestamp,
+      };
+    });
+    this.events.on(Mount.EVENT__MOUNT_SEND_RESPONSE_POST, ({ request }) => {
+      delete request.server;
+    });
+
     this.handlers = {};
+    this.sessionHandler = null;
 
     this.setLogger(logger);
     this.logger.debug('Create socket server');
+  }
+
+  get timestamp() {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  /**
+   * @param {C_SessionHandler} callback 
+   * @returns {this}
+   */
+  setSessionHandler(callback) {
+    this.sessionHandler = callback;
+    return this;
   }
 
   /**
