@@ -41,6 +41,7 @@ module.exports = class Mount {
     this.events = events;
     this.logger = (logger ?? Logger.base).channel(this.socket.id);
     this.handlers = handlers;
+    this.info = {};
 
     this._id = null;
   }
